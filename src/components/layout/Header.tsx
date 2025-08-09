@@ -32,7 +32,7 @@ export default function Header() {
           <nav className="grid gap-6 text-lg font-medium">
             <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold mb-4">
               <BookOpenCheck className="h-6 w-6 text-primary" />
-              <span className="font-headline">Classroom Central</span>
+              <span className="font-headline">LearnBox</span>
             </Link>
             {navItems.map((item) => {
               if (item.adminOnly && user?.role !== 'admin') {

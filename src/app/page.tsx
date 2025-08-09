@@ -30,7 +30,7 @@ export default function LoginPage() {
         <div className="mb-8 flex justify-center">
           <BookOpenCheck className="h-16 w-16 text-primary" />
         </div>
-        <h1 className="text-4xl font-bold text-foreground font-headline">Classroom Central</h1>
+        <h1 className="text-4xl font-bold text-foreground font-headline">LearnBox</h1>
         <p className="mt-2 text-lg text-muted-foreground">Your academic resource hub.</p>
         <div className="mt-10">
           <Button

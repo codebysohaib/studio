@@ -20,7 +20,7 @@ export default function Sidebar() {
       <div className="flex h-16 shrink-0 items-center border-b px-6">
         <Link href="/dashboard" className="flex items-center gap-2 font-semibold">
           <BookOpenCheck className="h-6 w-6 text-primary" />
-          <span className="font-headline">Classroom Central</span>
+          <span className="font-headline">LearnBox</span>
         </Link>
       </div>
       <nav className="flex-1 space-y-1 p-4">
