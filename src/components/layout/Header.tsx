@@ -1,6 +1,6 @@
 "use client";
 
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { BookOpenCheck, Home, Menu, Shield } from "lucide-react";
 import Link from "next/link";
@@ -28,6 +28,7 @@ export default function Header() {
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="bg-card">
+          <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
           <nav className="grid gap-6 text-lg font-medium">
             <Link href="/dashboard" className="flex items-center gap-2 text-lg font-semibold mb-4">
               <BookOpenCheck className="h-6 w-6 text-primary" />
