@@ -1,30 +1,17 @@
 "use client";
 
-import type { User } from '@/lib/types';
+import type { User as AppUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import React, { createContext, useContext, useEffect, useState } from 'react';
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut, User as FirebaseUser } from "firebase/auth";
+import { app } from './firebase';
+import { Loader2 } from 'lucide-react';
 
-// For demonstration, we'll use a hardcoded user.
-// In a real app, you'd get this from your auth provider.
-const mockUser: User = {
-  id: '1',
-  name: 'Sohaib Mughal',
-  email: 'mughalsohaib240@gmail.com',
-  role: 'admin',
-  avatar: 'https://placehold.co/100x100.png'
-};
-
-const studentUser: User = {
-  id: '2',
-  name: 'Student User',
-  email: 'student@classroom.central',
-  role: 'student',
-  avatar: 'https://placehold.co/100x100.png'
-};
-
+const auth = getAuth(app);
+const adminEmail = "mughalsohaib240@gmail.com";
 
 interface AuthContextType {
-  user: User | null;
+  user: AppUser | null;
   loginWithGoogle: () => void;
   logout: () => void;
   loading: boolean;
@@ -33,50 +20,75 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
+  const [user, setUser] = useState<AppUser | null>(null);
   const [loading, setLoading] = useState(true);
   const router = useRouter();
 
   useEffect(() => {
-    // In a real app, you would check for an active session here.
-    // For this mock, we'll check a value in localStorage.
-    const session = typeof window !== 'undefined' ? localStorage.getItem('isLoggedIn') : null;
-    const userRole = typeof window !== 'undefined' ? localStorage.getItem('userRole') : null;
-
-    if (session) {
-        if(userRole === 'admin') {
-            setUser(mockUser);
-        } else {
-            setUser(studentUser);
+    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+      if (firebaseUser) {
+        const appUser = formatUser(firebaseUser);
+        setUser(appUser);
+        if (window.location.pathname === '/') {
+          router.replace('/dashboard');
         }
-    }
-    setLoading(false);
-  }, []);
-
-  const loginWithGoogle = () => {
-    setLoading(true);
-    // Simulate API call and user role detection
-    setTimeout(() => {
-      // In a real app, you'd get the user from your auth provider.
-      // Here we simulate it. For demo purposes, we log in the admin.
-      // To test student, change mockUser to studentUser
-      const loggedInUser = mockUser; 
-      localStorage.setItem('isLoggedIn', 'true');
-      localStorage.setItem('userRole', loggedInUser.role);
-      setUser(loggedInUser);
+      } else {
+        setUser(null);
+      }
       setLoading(false);
+    });
+
+    return () => unsubscribe();
+  }, [router]);
+  
+  const formatUser = (firebaseUser: FirebaseUser): AppUser => {
+    return {
+      id: firebaseUser.uid,
+      name: firebaseUser.displayName || 'User',
+      email: firebaseUser.email || '',
+      role: firebaseUser.email === adminEmail ? 'admin' : 'student',
+      avatar: firebaseUser.photoURL || `https://placehold.co/100x100.png`
+    }
+  }
+
+
+  const loginWithGoogle = async () => {
+    setLoading(true);
+    const provider = new GoogleAuthProvider();
+    try {
+      const result = await signInWithPopup(auth, provider);
+      const appUser = formatUser(result.user);
+      setUser(appUser);
       router.push('/dashboard');
-    }, 500);
+    } catch (error) {
+      console.error("Authentication Error:", error);
+      setUser(null);
+    } finally {
+        setLoading(false);
+    }
   };
 
-  const logout = () => {
+  const logout = async () => {
     setLoading(true);
-    localStorage.removeItem('isLoggedIn');
-    localStorage.removeItem('userRole');
-    setUser(null);
-    setLoading(false);
-    router.push('/');
+    try {
+        await signOut(auth);
+        setUser(null);
+        router.push('/');
+    } catch(error) {
+        console.error("Sign Out Error:", error);
+    } finally {
+        setLoading(false);
+    }
   };
+  
+    if (loading) {
+        return (
+          <div className="flex min-h-screen items-center justify-center bg-background">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          </div>
+        );
+    }
+
 
   return (
     <AuthContext.Provider value={{ user, loginWithGoogle, logout, loading }}>

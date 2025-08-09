@@ -11,22 +11,22 @@ export const mockSubjects: Subject[] = [
 
 export const mockResources: { [key: string]: Resource[] } = {
     'math101': [
-        { id: '1', name: 'Algebra_Chapter_1.pdf', type: 'pdf', url: '#', uploadedAt: '2023-10-26', uploaderName: 'Admin User' },
+        { id: '1', name: 'Algebra_Chapter_1.pdf', type: 'pdf', url: '#', uploadedAt: '2023-10-26', uploaderName: 'Sohaib Mughal' },
         { id: '2', name: 'Geometric_Shapes.png', type: 'image', url: '#', uploadedAt: '2023-10-25', uploaderName: 'Student A' },
     ],
     'phy202': [
-        { id: '3', name: 'Newton_Laws.pdf', type: 'pdf', url: '#', uploadedAt: '2023-10-24', uploaderName: 'Admin User' },
+        { id: '3', name: 'Newton_Laws.pdf', type: 'pdf', url: '#', uploadedAt: '2023-10-24', uploaderName: 'Sohaib Mughal' },
     ],
 };
 
 export const mockAnnouncements: Announcement[] = [
     { id: '1', title: 'Mid-term Exams Schedule', content: 'The mid-term exams will be held from Nov 15th to Nov 25th. Please check the detailed schedule in the documents section.', pinned: true, createdAt: '2023-10-28' },
     { id: '2', title: 'New Resources for Physics', content: 'New study materials for Physics 202 have been uploaded.', pinned: false, createdAt: '2023-10-27' },
-    { id: '3', title: 'Welcome to Classroom Central', content: 'Welcome everyone! Feel free to upload and share your study materials.', pinned: false, createdAt: '2023-10-20' },
+    { id: '3', title: 'Welcome to LearnBox', content: 'Welcome everyone! Feel free to upload and share your study materials.', pinned: false, createdAt: '2023-10-20' },
 ];
 
 export const mockUsers: User[] = [
-    { id: '1', name: 'Admin User', email: 'admin@classroom.central', role: 'admin', avatar: 'https://placehold.co/100x100.png' },
+    { id: '1', name: 'Sohaib Mughal', email: 'mughalsohaib240@gmail.com', role: 'admin', avatar: 'https://placehold.co/100x100.png' },
     { id: '2', name: 'Student A', email: 'student.a@example.com', role: 'student', avatar: 'https://placehold.co/100x100.png' },
     { id: '3', name: 'Student B', email: 'student.b@example.com', role: 'student', avatar: 'https://placehold.co/100x100.png' },
 ]
