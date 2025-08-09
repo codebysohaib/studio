@@ -1,20 +1,19 @@
+
 "use client";
 
 import type { User as AppUser } from '@/lib/types';
 import { useRouter } from 'next/navigation';
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { getAuth, onAuthStateChanged, signOut, User as FirebaseUser, sendSignInLinkToEmail, isSignInWithEmailLink, signInWithEmailLink as firebaseSignInWithEmailLink } from "firebase/auth";
-import { app } from './firebase';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { getUsers } from './data';
 
-const auth = getAuth(app);
-const adminEmail = "mughalsohaib240@gmail.com";
+const ADMIN_EMAIL = "mughalsohaib240@gmail.com";
+const ADMIN_PASS = "@sohaibofficial66";
 
 interface AuthContextType {
   user: AppUser | null;
-  sendSignInLink: (email: string) => Promise<void>;
-  signInWithEmailLink: (email: string, url: string) => Promise<void>;
+  login: (email: string, password?: string) => Promise<boolean>;
   logout: () => void;
   loading: boolean;
 }
@@ -28,96 +27,77 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
-      if (firebaseUser) {
-        const appUser = formatUser(firebaseUser);
-        setUser(appUser);
-      } else {
-        setUser(null);
-      }
-      setLoading(false);
-    });
-
-    return () => unsubscribe();
-  }, [router]);
-  
-  const formatUser = (firebaseUser: FirebaseUser): AppUser => {
-    return {
-      id: firebaseUser.uid,
-      name: firebaseUser.displayName || firebaseUser.email || 'User',
-      email: firebaseUser.email || '',
-      role: firebaseUser.email === adminEmail ? 'admin' : 'student',
-      avatar: firebaseUser.photoURL || `https://placehold.co/100x100.png`
-    }
-  }
-
-  const sendSignInLink = async (email: string) => {
-    setLoading(true);
-    const actionCodeSettings = {
-        url: window.location.origin,
-        handleCodeInApp: true,
-    };
+    // Check for a logged-in user in localStorage on initial load
     try {
-        await sendSignInLinkToEmail(auth, email, actionCodeSettings);
-        window.localStorage.setItem('emailForSignIn', email);
-        toast({ title: "Sign-in link sent", description: "Check your email for the sign-in link."});
-    } catch (error: any) {
-        console.error("Send Link Error:", error);
-        toast({ title: "Error sending link", description: error.message, variant: "destructive" });
+      const storedUser = window.localStorage.getItem('learnbox-user');
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+    } catch (error) {
+      console.error("Could not parse user from localStorage", error)
     } finally {
-        setLoading(false);
+      setLoading(false);
+    }
+  }, []);
+
+  const login = async (email: string, password?: string): Promise<boolean> => {
+    setLoading(true);
+    try {
+      let loggedInUser: AppUser | null = null;
+      if (email === ADMIN_EMAIL) {
+        if (password === ADMIN_PASS) {
+          loggedInUser = { id: 'admin-user', name: 'Sohaib Mughal', email: ADMIN_EMAIL, role: 'admin', avatar: 'https://placehold.co/100x100.png' };
+        }
+      } else {
+         loggedInUser = { id: email, name: email.split('@')[0], email: email, role: 'student', avatar: 'https://placehold.co/100x100.png' };
+      }
+
+      if (loggedInUser) {
+        setUser(loggedInUser);
+        window.localStorage.setItem('learnbox-user', JSON.stringify(loggedInUser));
+        toast({ title: "Login Successful", description: `Welcome, ${loggedInUser.name}!`});
+        
+        // This is a mock of adding user to a list on login
+        const existingUsers = await getUsers();
+        const userExists = existingUsers.some(u => u.email === loggedInUser.email);
+        if(!userExists) {
+            // In a real app, this would be a database call
+            console.log("Adding new user to mock user list:", loggedInUser.email);
+        }
+
+        router.push('/dashboard');
+        return true;
+      }
+
+      return false;
+
+    } catch (error) {
+      console.error("Login error", error);
+      return false;
+    } finally {
+      setLoading(false);
     }
   };
-
-  const signInWithEmailLink = async (email: string, url: string) => {
-    setLoading(true);
-    if (isSignInWithEmailLink(auth, url)) {
-        try {
-            const result = await firebaseSignInWithEmailLink(auth, email, url);
-            window.localStorage.removeItem('emailForSignIn');
-            const appUser = formatUser(result.user);
-            setUser(appUser);
-            router.push('/dashboard');
-        } catch(error: any) {
-            console.error("Sign In Error:", error);
-            toast({ title: "Sign-in failed", description: "The sign-in link may be invalid or expired.", variant: "destructive" });
-            router.push('/');
-        } finally {
-            setLoading(false);
-        }
-    }
-  }
-
 
   const logout = async () => {
     setLoading(true);
-    try {
-        await signOut(auth);
-        setUser(null);
-        router.push('/');
-    } catch(error) {
-        console.error("Sign Out Error:", error);
-    } finally {
-        setLoading(false);
-    }
+    setUser(null);
+    window.localStorage.removeItem('learnbox-user');
+    router.push('/');
+    setLoading(false);
   };
   
-    if (loading && !user) {
-        const emailFromStorage = typeof window !== 'undefined' ? window.localStorage.getItem('emailForSignIn') : null;
-        const isSignInAttempt = typeof window !== 'undefined' ? isSignInWithEmailLink(auth, window.location.href) : false;
-
-        if (!isSignInAttempt || !emailFromStorage) {
-            return (
-                <div className="flex min-h-screen items-center justify-center bg-background">
-                    <Loader2 className="h-12 w-12 animate-spin text-primary" />
-                </div>
-            );
-        }
+    if (loading) {
+      return (
+          <div className="flex min-h-screen items-center justify-center bg-background">
+              <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          </div>
+      );
     }
 
 
   return (
-    <AuthContext.Provider value={{ user, sendSignInLink, signInWithEmailLink, logout, loading }}>
+    <AuthContext.Provider value={{ user, login, logout, loading }}>
       {children}
     </AuthContext.Provider>
   );
