@@ -1,21 +1,44 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { useAuth } from "@/lib/auth";
-import { BookOpenCheck, Loader2 } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useEffect } from "react";
+import { BookOpenCheck, Loader2, Mail } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 export default function LoginPage() {
-  const { loginWithGoogle, loading, user } = useAuth();
+  const { signInWithEmailLink, sendSignInLink, loading, user } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
+
+  const [email, setEmail] = useState('');
+  const [isLinkSent, setIsLinkSent] = useState(false);
 
   useEffect(() => {
     if (user) {
       router.replace('/dashboard');
+      return;
     }
-  }, [user, router]);
 
+    const emailFromStorage = window.localStorage.getItem('emailForSignIn');
+    if (searchParams.has('apiKey') && emailFromStorage) {
+      signInWithEmailLink(emailFromStorage, window.location.href);
+    }
+  }, [user, router, searchParams, signInWithEmailLink]);
+
+  const handleSignIn = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!email) {
+        toast({ title: "Email is required", variant: "destructive" });
+        return;
+    }
+    await sendSignInLink(email);
+    setIsLinkSent(true);
+  };
+  
   if (loading || user) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-background">
@@ -32,23 +55,46 @@ export default function LoginPage() {
         </div>
         <h1 className="text-4xl font-bold text-foreground font-headline">LearnBox</h1>
         <p className="mt-2 text-lg text-muted-foreground">Your academic resource hub.</p>
-        <div className="mt-10">
-          <Button
-            onClick={loginWithGoogle}
-            disabled={loading}
-            size="lg"
-            className="w-full"
-          >
-            {loading ? (
-              <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-            ) : (
-              <svg className="mr-2 h-5 w-5" aria-hidden="true" focusable="false" viewBox="0 0 488 512">
-                <path fill="currentColor" d="M488 261.8C488 403.3 381.5 512 244 512 110.3 512 0 401.7 0 265.9c0-43.2 12.8-83.3 35.6-117.9h-1.8C13.4 180.2 0 221.7 0 265.9c0 101.4 82.5 183.9 184.9 183.9 44.4 0 86.2-16.7 118-44.9 20.3 15.1 47.7 24.3 78.2 24.3 50.8 0 92.5-41.7 92.5-92.5 0-14-3.7-27.2-10-38.6zM244 177.1c-3.1-6.1-8-11.4-14.3-15.4-2.5-1.6-5.1-2.9-7.9-4-10.9-4.2-22.6-6.3-34.8-6.3-43.2 0-78.3 35.1-78.3 78.3s35.1 78.3 78.3 78.3c12.2 0 23.9-2.1 34.8-6.3 2.8-1.1 5.4-2.4 7.9-4 6.3-4 11.2-9.3 14.3-15.4 3.1-6.1 4.7-12.9 4.7-20.1s-1.6-14-4.7-20.1zm-86.2 66.8c-20.1 0-36.3-16.2-36.3-36.3s16.2-36.3 36.3-36.3 36.3 16.2 36.3 36.3-16.2 36.3-36.3-36.3z"></path>
-              </svg>
-            )}
-            Sign in with Google
-          </Button>
-        </div>
+        
+        {isLinkSent ? (
+            <div className="mt-10 text-center bg-accent/20 border border-primary/20 p-6 rounded-lg">
+                <Mail className="h-12 w-12 text-primary mx-auto mb-4" />
+                <h2 className="text-2xl font-semibold text-foreground">Check your inbox</h2>
+                <p className="mt-2 text-muted-foreground">
+                    A sign-in link has been sent to <span className="font-bold text-foreground">{email}</span>. Click the link to log in.
+                </p>
+                 <p className="mt-4 text-xs text-muted-foreground">
+                    You can close this tab.
+                </p>
+            </div>
+        ) : (
+            <form onSubmit={handleSignIn} className="mt-10">
+              <div className="flex flex-col gap-4">
+                <Input
+                    type="email"
+                    placeholder="Enter your email address"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="h-12 text-center"
+                />
+                <Button
+                    type="submit"
+                    disabled={loading}
+                    size="lg"
+                    className="w-full"
+                >
+                    {loading ? (
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    ) : (
+                    <Mail className="mr-2 h-5 w-5" />
+                    )}
+                    Send Sign-In Link
+                </Button>
+              </div>
+            </form>
+        )}
+
         <p className="mt-12 text-sm text-muted-foreground">
           Access is restricted to approved class members.
         </p>
