@@ -33,6 +33,10 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
         <main className="flex-1 p-4 sm:p-6 lg:p-8">
           {children}
         </main>
+        <footer className="p-4 text-center text-sm text-muted-foreground border-t">
+            <p>Made with ❤️ by Sohaib</p>
+            <p className="mt-1">For any query, contact me on WhatsApp: +923476856605</p>
+        </footer>
       </div>
     </div>
   );

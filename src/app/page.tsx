@@ -52,6 +52,9 @@ export default function LoginPage() {
         <p className="mt-12 text-sm text-muted-foreground">
           Access is restricted to approved class members.
         </p>
+        <p className="mt-4 text-xs text-muted-foreground">
+          Developed by Sohaib
+        </p>
       </div>
     </div>
   );
